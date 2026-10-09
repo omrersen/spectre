@@ -4,6 +4,7 @@
 
 - [Getting Started](getting-started.md)
 - [Configuration](configuration.md)
+- [Architecture](architecture.md)
 - [Plugin Development](plugins.md)
 - [API Reference](api.md)
 - [Contributing](../CONTRIBUTING.md)

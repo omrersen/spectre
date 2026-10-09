@@ -17,6 +17,8 @@ scan:
   threads: 50        # Max concurrent requests
   timeout: 30        # Per-scanner timeout (seconds)
   retries: 3         # Retry count on failure
+  proxy: ""          # HTTP proxy URL (e.g. http://127.0.0.1:8080)
+  rate_limit: 0      # Requests per second (0 = unlimited)
   user_agent: "Spectre/0.1.0"
 
 ai:

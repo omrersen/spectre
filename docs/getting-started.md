@@ -27,6 +27,23 @@ spectre scan https://example.com --full
 spectre scan https://example.com --scanner web,secrets
 ```
 
+## Multi-Target Scanning
+
+```bash
+# Scan targets from a file (one URL per line)
+spectre scan -F targets.txt
+
+# Parallel scan for speed
+spectre scan -F targets.txt --parallel
+```
+
+`targets.txt` example:
+```
+https://example.com
+https://app.example.com
+https://api.example.com
+```
+
 ## Configure AI (Optional)
 
 ```bash
@@ -52,6 +69,9 @@ spectre report results.json -o report.html --format html
 
 # Markdown report
 spectre report results.json -o report.md --format markdown
+
+# SARIF (GitHub code-scanning compatible)
+spectre report results.json -o report.sarif --format sarif
 ```
 
 ## Next Steps

@@ -1,0 +1,93 @@
+name: "Spectre Security Scan"
+description: "Run Spectre AI-powered security scanner on your repository"
+author: "omrersen"
+
+branding:
+  icon: "shield"
+  color: "purple"
+
+inputs:
+  target:
+    description: "Target URL to scan"
+    required: true
+  scanners:
+    description: "Comma-separated list of scanners (web, subdomain, port, secrets, tech, ssl, dirscan, cve)"
+    required: false
+    default: "web,tech,ssl"
+  ai:
+    description: "Enable AI analysis (requires OPENAI_API_KEY or ANTHROPIC_API_KEY secret)"
+    required: false
+    default: "false"
+  output:
+    description: "Output file path"
+    required: false
+    default: "spectre-report.sarif"
+  fail-on:
+    description: "Minimum severity to fail the workflow (critical, high, medium, low)"
+    required: false
+    default: "critical"
+
+outputs:
+  findings-count:
+    description: "Total number of findings"
+    value: ${{ steps.scan.outputs.findings-count }}
+  critical-count:
+    description: "Number of critical findings"
+    value: ${{ steps.scan.outputs.critical-count }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Install Spectre
+      shell: bash
+      run: pip install spectre-scanner
+
+    - name: Run Scan
+      id: scan
+      shell: bash
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      run: |
+        AI_FLAG=""
+        if [ "${{ inputs.ai }}" = "true" ]; then
+          AI_FLAG="--ai"
+        fi
+
+        spectre scan "${{ inputs.target }}" \
+          --scanner "${{ inputs.scanners }}" \
+          $AI_FLAG \
+          -o scan-results.json --format json
+
+        # Generate SARIF for GitHub code scanning
+        spectre report scan-results.json -o "${{ inputs.output }}" --format sarif
+
+        # Count findings
+        CRITICAL=$(python -c "import json; d=json.load(open('scan-results.json')); print(sum(1 for f in d.get('findings',[]) if f.get('severity')=='critical'))")
+        TOTAL=$(python -c "import json; d=json.load(open('scan-results.json')); print(len(d.get('findings',[])))")
+        echo "findings-count=$TOTAL" >> "$GITHUB_OUTPUT"
+        echo "critical-count=$CRITICAL" >> "$GITHUB_OUTPUT"
+
+    - name: Upload SARIF Report
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: ${{ inputs.output }}
+      continue-on-error: true
+
+    - name: Upload Raw Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: spectre-scan-results
+        path: scan-results.json
+
+    - name: Fail on Critical
+      if: steps.scan.outputs.critical-count > 0 && inputs.fail-on == 'critical'
+      shell: bash
+      run: |
+        echo "❌ ${{ steps.scan.outputs.critical-count }} critical findings detected!"
+        exit 1

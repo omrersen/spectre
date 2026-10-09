@@ -1,6 +1,7 @@
 from enum import Enum
-from datetime import datetime
-from pydantic import BaseModel, Field
+from datetime import datetime, timezone
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Severity(str, Enum):
@@ -12,6 +13,8 @@ class Severity(str, Enum):
 
 
 class Finding(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
+
     title: str
     severity: Severity
     target: str
@@ -21,12 +24,9 @@ class Finding(BaseModel):
     cvss: float | None = None
     cve: list[str] = []
     metadata: dict = {}
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     verified: bool = False
     false_positive: bool = False
-
-    class Config:
-        use_enum_values = True
 
 
 class ScanResult(BaseModel):
@@ -34,19 +34,19 @@ class ScanResult(BaseModel):
     findings: list[Finding] = []
     scanners_used: list[str] = []
     duration: float = 0.0
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
-    
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
     @property
     def summary(self) -> dict[str, int]:
         counts = {s.value: 0 for s in Severity}
         for f in self.findings:
             counts[f.severity] += 1
         return counts
-    
+
     @property
     def critical_count(self) -> int:
         return sum(1 for f in self.findings if f.severity == Severity.CRITICAL)
-    
+
     @property
     def high_count(self) -> int:
         return sum(1 for f in self.findings if f.severity == Severity.HIGH)

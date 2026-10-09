@@ -37,7 +37,7 @@ mypy spectre/
 1. Create a new file in `spectre/scanners/`
 2. Inherit from `BaseScanner`
 3. Implement the `scan` method
-4. Register it in `spectre/cli.py`
+4. Register it in `spectre/cli.py` (optional import block)
 
 ```python
 from .base import BaseScanner
@@ -50,6 +50,8 @@ class MyScanner(BaseScanner):
     async def scan(self, target: str) -> list[Finding]:
         return []
 ```
+
+Built-in scanners: `web`, `subdomain`, `port`, `secrets`, `tech`, `ssl`, `dirscan`, `cve`
 
 ## Adding a Plugin
 

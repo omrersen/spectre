@@ -7,7 +7,12 @@
 ```python
 from spectre.core import ScanEngine
 
-engine = ScanEngine(max_concurrent=50, timeout=30)
+engine = ScanEngine(
+    max_concurrent=50,
+    timeout=30,
+    proxy="http://127.0.0.1:8080",  # optional HTTP proxy
+    rate_limit=10,                   # requests per second, 0 = unlimited
+)
 
 # Register scanners
 from spectre.scanners.web import WebScanner
@@ -90,4 +95,22 @@ from spectre.reporting import generate_report
 json_str = generate_report(result.model_dump(mode="json"), "json")
 html_str = generate_report(result.model_dump(mode="json"), "html")
 md_str = generate_report(result.model_dump(mode="json"), "markdown")
+sarif_str = generate_report(result.model_dump(mode="json"), "sarif")  # GitHub code-scanning compatible
+```
+
+### SARIF Format
+
+The SARIF output is compatible with GitHub code scanning:
+
+```bash
+spectre report scan-results.json -o report.sarif --format sarif
+```
+
+Upload to GitHub code scanning in your workflow:
+
+```yaml
+- name: Upload SARIF
+  uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: report.sarif
 ```

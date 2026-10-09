@@ -7,6 +7,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from spectre.models import Finding, ScanResult, Severity
 from spectre.scanners.base import BaseScanner
+from spectre.utils.helpers import RateLimiter
 
 console = Console()
 
@@ -14,14 +15,27 @@ console = Console()
 class ScanEngine:
     """Core scanning engine with async support."""
     
-    def __init__(self, max_concurrent: int = 50, timeout: int = 30):
+    def __init__(
+        self,
+        max_concurrent: int = 50,
+        timeout: int = 30,
+        proxy: str | None = None,
+        rate_limit: int = 0,
+    ):
         self.max_concurrent = max_concurrent
         self.timeout = timeout
+        self.proxy = proxy or None
         self.semaphore = asyncio.Semaphore(max_concurrent)
         self.scanners: list[BaseScanner] = []
+        # Global rate limiter (requests per second), disabled when 0
+        self.rate_limiter = RateLimiter(max_calls=rate_limit, period=1.0) if rate_limit > 0 else None
     
     def register_scanner(self, scanner: BaseScanner):
         """Register a scanner with the engine."""
+        if self.proxy and hasattr(scanner, "proxy"):
+            scanner.proxy = self.proxy
+        if self.rate_limiter and hasattr(scanner, "rate_limiter"):
+            scanner.rate_limiter = self.rate_limiter
         self.scanners.append(scanner)
     
     async def scan(self, target: str, scanners: list[str] | None = None) -> ScanResult:

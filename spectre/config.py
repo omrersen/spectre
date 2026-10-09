@@ -8,6 +8,9 @@ from pydantic import BaseModel
 class Config(BaseModel):
     scan_threads: int = 50
     scan_timeout: int = 30
+    scan_retries: int = 3
+    scan_proxy: str = ""
+    scan_rate_limit: int = 0  # requests per second, 0 = unlimited
     ai_enabled: bool = False
     ai_provider: str = "openai"
     ai_model: str = "gpt-4"

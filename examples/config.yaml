@@ -5,6 +5,8 @@ scan:
   threads: 50
   timeout: 30
   retries: 3
+  proxy: ""          # HTTP proxy URL (e.g. http://127.0.0.1:8080)
+  rate_limit: 0      # Requests per second (0 = unlimited)
   user_agent: "Spectre/0.1.0"
 
 ai:

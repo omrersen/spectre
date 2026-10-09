@@ -39,14 +39,23 @@ Spectre is a next-generation security scanning platform that combines high-perfo
 
 | Scanner | Description | Status |
 |---------|-------------|--------|
-| 🔍 Web Scanner | XSS, SQLi, SSRF, LFI, RCE detection | ✅ |
-| 🌐 Subdomain Enumeration | 20+ sources with passive DNS | ✅ |
-| 🔌 Port Scanner | Service detection + version fingerprinting | ✅ |
-| 📝 Secret Scanner | API keys, tokens, credentials in code | ✅ |
-| 🏗️ Tech Stack Detection | 500+ technology fingerprints | ✅ |
-| 📜 CVE Correlation | Real-time NVD + GitHub Advisories | ✅ |
-| 🔐 SSL/TLS Analyzer | Certificate chain + vulnerability check | ✅ |
-| 📁 Directory Discovery | Smart fuzzing with wordlists | ✅ |
+| 🔍 Web Scanner | XSS, SQLi, SSRF, LFI, RCE detection with WAF bypass | ✅ |
+| 🌐 Subdomain Enumeration | crt.sh, HackerTarget, VirusTotal, DNS brute-force | ✅ |
+| 🔌 Port Scanner | 1127 ports, banner grabbing, service fingerprinting | ✅ |
+| 📝 Secret Scanner | 27 patterns + Shannon entropy detection | ✅ |
+| 🏗️ Tech Stack Detection | 66 technology fingerprints (CMS, CDN, WAF, frameworks) | ✅ |
+| 📜 CVE Correlation | NVD API 2.0, CPE mapping, CVSS severity scoring | ✅ |
+| 🔐 SSL/TLS Analyzer | Protocol versions, certificates, weak ciphers, HSTS | ✅ |
+| 📁 Directory Discovery | Smart fuzzing, 155-path wordlist, soft-404 detection | ✅ |
+
+### Report Formats
+
+| Format | Description |
+|--------|-------------|
+| JSON | Machine-readable scan results |
+| Markdown | Human-readable reports |
+| HTML | Styled security reports with severity badges |
+| SARIF | GitHub code-scanning compatible format |
 
 ### AI Features
 
@@ -140,7 +149,55 @@ spectre scan https://example.com --threads 100 --timeout 30
 spectre scan https://example.com -o report.html --format html
 
 # Scan from file (list of targets)
-spectre scan -f targets.txt --parallel
+spectre scan -F targets.txt --parallel
+
+# SARIF export (GitHub code-scanning compatible)
+spectre report scan-results.json -o report.sarif --format sarif
+```
+
+### Multi-Target Scanning
+
+```bash
+# Create a targets file
+cat > targets.txt << 'EOF'
+https://example.com
+https://app.example.com
+https://api.example.com
+EOF
+
+# Scan all targets sequentially
+spectre scan -F targets.txt
+
+# Scan in parallel (faster)
+spectre scan -F targets.txt --parallel --scanner web,tech,ssl
+```
+
+### GitHub Action
+
+Add Spectre to any repository's CI:
+
+```yaml
+# .github/workflows/security.yml
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 0 * * 1'  # Weekly scan
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: omrersen/spectre@v0.2.0
+        with:
+          target: ${{ github.repository_url }}
+          scanners: web,tech,ssl,secrets
+          ai: false
+          output: spectre-report.sarif
+          fail-on: critical
 ```
 
 ### Subdomain Enumeration

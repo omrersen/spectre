@@ -15,6 +15,8 @@ def generate_report(data: dict[str, Any], fmt: str = "json") -> str:
         return _generate_markdown(data)
     if fmt == "html":
         return _generate_html(data)
+    if fmt == "sarif":
+        return _generate_sarif(data)
     raise ValueError(f"Unsupported format: {fmt}")
 
 
@@ -129,3 +131,124 @@ def _count_by_severity(findings: list[dict]) -> dict[str, int]:
         sev = f.get("severity", "info")
         counts[sev] = counts.get(sev, 0) + 1
     return counts
+
+
+_SARIF_LEVEL = {
+    "critical": "error",
+    "high": "error",
+    "medium": "warning",
+    "low": "note",
+    "info": "note",
+}
+
+_SARIF_RULES = [
+    {"id": "spectre-sql-injection", "name": "SQL Injection", "shortDescription": {"text": "SQL Injection vulnerability"}},
+    {"id": "spectre-xss", "name": "Cross-Site Scripting", "shortDescription": {"text": "Cross-Site Scripting (XSS)"}},
+    {"id": "spectre-ssrf", "name": "SSRF", "shortDescription": {"text": "Server-Side Request Forgery"}},
+    {"id": "spectre-lfi", "name": "LFI", "shortDescription": {"text": "Local File Inclusion"}},
+    {"id": "spectre-rce", "name": "RCE", "shortDescription": {"text": "Remote Code Execution"}},
+    {"id": "spectre-command-injection", "name": "Command Injection", "shortDescription": {"text": "OS Command Injection"}},
+    {"id": "spectre-path-traversal", "name": "Path Traversal", "shortDescription": {"text": "Path Traversal"}},
+    {"id": "spectre-open-redirect", "name": "Open Redirect", "shortDescription": {"text": "Open Redirect"}},
+    {"id": "spectre-tls", "name": "TLS Weakness", "shortDescription": {"text": "Weak TLS configuration"}},
+    {"id": "spectre-secret", "name": "Exposed Secret", "shortDescription": {"text": "Hardcoded secret or credential"}},
+    {"id": "spectre-missing-header", "name": "Missing Security Header", "shortDescription": {"text": "Missing security header"}},
+    {"id": "spectre-cve", "name": "Known CVE", "shortDescription": {"text": "Component with known CVE"}},
+    {"id": "spectre-sensitive-file", "name": "Sensitive File Exposed", "shortDescription": {"text": "Sensitive file or directory exposed"}},
+    {"id": "spectre-info-leak", "name": "Information Leak", "shortDescription": {"text": "Server information disclosure"}},
+    {"id": "spectre-generic", "name": "Security Finding", "shortDescription": {"text": "Generic security finding"}},
+]
+
+
+def _classify_rule(title: str) -> str:
+    t = title.lower()
+    mapping = [
+        ("sql", "spectre-sql-injection"),
+        ("xss", "spectre-xss"),
+        ("cross-site", "spectre-xss"),
+        ("ssrf", "spectre-ssrf"),
+        ("file inclusion", "spectre-lfi"),
+        ("lfi", "spectre-lfi"),
+        ("rce", "spectre-rce"),
+        ("remote code", "spectre-rce"),
+        ("command injection", "spectre-command-injection"),
+        ("path traversal", "spectre-path-traversal"),
+        ("redirect", "spectre-open-redirect"),
+        ("tls", "spectre-tls"),
+        ("ssl", "spectre-tls"),
+        ("secret", "spectre-secret"),
+        ("credential", "spectre-secret"),
+        ("api key", "spectre-secret"),
+        ("api_key", "spectre-secret"),
+        ("password", "spectre-secret"),
+        ("token", "spectre-secret"),
+        ("aws key", "spectre-secret"),
+        ("key", "spectre-secret"),
+        ("header", "spectre-missing-header"),
+        ("cve", "spectre-cve"),
+        ("file", "spectre-sensitive-file"),
+        ("directory", "spectre-sensitive-file"),
+        ("leak", "spectre-info-leak"),
+        ("disclosure", "spectre-info-leak"),
+    ]
+    for keyword, rule_id in mapping:
+        if keyword in t:
+            return rule_id
+    return "spectre-generic"
+
+
+def _generate_sarif(data: dict[str, Any]) -> str:
+    """Generate a SARIF 2.1.0 report (GitHub code-scanning compatible)."""
+    findings = data.get("findings", [])
+    rules_by_id = {r["id"]: r for r in _SARIF_RULES}
+
+    results = []
+    for f in findings:
+        rule_id = _classify_rule(f.get("title", ""))
+        severity = f.get("severity", "info")
+        level = _SARIF_LEVEL.get(severity, "note")
+
+        message = f.get("title", "Finding")
+        if f.get("evidence"):
+            message += f" — Evidence: {f['evidence'][:200]}"
+
+        results.append(
+            {
+                "ruleId": rule_id,
+                "level": level,
+                "message": {"text": message},
+                "locations": [
+                    {
+                        "physicalLocation": {
+                            "artifactLocation": {"uri": f.get("target", data.get("target", ""))},
+                        }
+                    }
+                ],
+                "properties": {
+                    "severity": severity,
+                    "scanner": f.get("scanner", ""),
+                    "remediation": f.get("remediation", ""),
+                    "cvss": f.get("cvss"),
+                    "cve": f.get("cve", []),
+                },
+            }
+        )
+
+    sarif = {
+        "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+        "version": "2.1.0",
+        "runs": [
+            {
+                "tool": {
+                    "driver": {
+                        "name": "Spectre",
+                        "informationUri": "https://github.com/omrersen/spectre",
+                        "version": "0.1.0",
+                        "rules": list(rules_by_id.values()),
+                    }
+                },
+                "results": results,
+            }
+        ],
+    }
+    return json.dumps(sarif, indent=2, default=str)
