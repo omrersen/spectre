@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **WAF Detection scanner** (`waf`) — 14 WAF signatures (Cloudflare, AWS WAF, Akamai, Sucuri, Imperva, F5 BIG-IP, ModSecurity, Wordfence, FortiWeb, Barracuda, DenyAll, Reblaze, Fastly, Varnish)
 - **Web Archive scanner** (`archive`) — Wayback Machine CDX API, historical sensitive paths, URLhaus malicious URL check
 - **Robots Analyzer** (`robots`) — robots.txt, sitemap.xml, security.txt, humans.txt analysis
+- **Jinja2 HTML report template** — Professional dark-themed security report with CSS bar chart, expandable findings, print-friendly styles
+- **Ollama local AI provider** — Run AI analysis on local LLMs via Ollama (llama3.2, etc.)
+- **AI tests** — 9 tests for analyzer providers and helpers
 - CLI auto-registration for optional scanners (try/except imports)
 - ruff lint fixes across core/models/ai/plugins/reporting/integrations/utils/cli/config (65 auto-fixed)
 

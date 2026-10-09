@@ -23,8 +23,8 @@ scan:
 
 ai:
   enabled: false
-  provider: "openai" # openai | anthropic
-  model: "gpt-4"
+  provider: "openai" # openai | anthropic | ollama
+  model: "gpt-4"    # e.g. gpt-4, claude-sonnet-4-5, llama3.2
 
 scanners:
   web:

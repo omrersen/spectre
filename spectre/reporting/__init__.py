@@ -14,7 +14,12 @@ def generate_report(data: dict[str, Any], fmt: str = "json") -> str:
     if fmt == "markdown":
         return _generate_markdown(data)
     if fmt == "html":
-        return _generate_html(data)
+        try:
+            from .html_report import render_html_report
+
+            return render_html_report(data)
+        except ImportError:
+            return _generate_html(data)
     if fmt == "sarif":
         return _generate_sarif(data)
     raise ValueError(f"Unsupported format: {fmt}")

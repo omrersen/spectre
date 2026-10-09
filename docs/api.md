@@ -60,7 +60,14 @@ result.duration
 ```python
 from spectre.ai import AIAnalyzer
 
+# OpenAI
 analyzer = AIAnalyzer(provider="openai", model="gpt-4")
+
+# Anthropic
+analyzer = AIAnalyzer(provider="anthropic", model="claude-sonnet-4-5")
+
+# Ollama (local LLM)
+analyzer = AIAnalyzer(provider="ollama", model="llama3.2", host="http://localhost:11434")
 
 # Executive summary
 summary = await analyzer.analyze(result)
@@ -70,7 +77,18 @@ findings = await analyzer.reduce_false_positives(result.findings)
 
 # PoC suggestion
 poc = await analyzer.suggest_exploit(result.findings[0])
+
+# List available Ollama models
+models = await analyzer.list_models()
 ```
+
+### AI Providers
+
+| Provider | Env Variable | Default Model |
+|----------|-------------|---------------|
+| OpenAI | `OPENAI_API_KEY` | gpt-4 |
+| Anthropic | `ANTHROPIC_API_KEY` | claude-sonnet-4-5 |
+| Ollama | `OLLAMA_HOST` (optional) | llama3.2 |
 
 ## Notifications
 

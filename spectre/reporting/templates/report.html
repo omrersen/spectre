@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Spectre Security Scanner">
+<title>Spectre Scan Report — {{ target }}</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --card-2: #273449;
+    --border: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #8b5cf6;
+    --critical: #dc2626;
+    --high: #ea580c;
+    --medium: #ca8a04;
+    --low: #2563eb;
+    --info: #0891b2;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 2rem 1.5rem;
+    min-height: 100vh;
+  }
+
+  .container { max-width: 1200px; margin: 0 auto; }
+
+  /* ---------- Header ---------- */
+  .report-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), #6d28d9);
+    font-size: 1.5rem;
+    box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+  }
+
+  .brand h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; }
+  .brand .subtitle { color: var(--muted); font-size: 0.875rem; font-weight: 400; }
+
+  .header-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+
+  .header-meta .item { display: flex; flex-direction: column; }
+  .header-meta .item .k { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .header-meta .item .v { color: var(--text); font-weight: 600; word-break: break-all; }
+
+  .target-banner {
+    background: var(--card);
+    border-left: 4px solid var(--accent);
+    border-radius: 8px;
+    padding: 0.9rem 1.1rem;
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+    overflow-wrap: anywhere;
+  }
+
+  .target-banner strong { color: var(--accent); }
+
+  .scanner-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem; }
+  .scanner-tag {
+    background: var(--card-2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 0.1rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  }
+
+  /* ---------- Sections ---------- */
+  section { margin-bottom: 2.25rem; }
+
+  .section-title {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .section-title::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+  /* ---------- Summary cards ---------- */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+
+  .summary-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.1rem 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .summary-card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--sev-color, var(--muted));
+  }
+
+  .summary-card .count {
+    font-size: 2.25rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--sev-color, var(--text));
+    font-variant-numeric: tabular-nums;
+  }
+
+  .summary-card .label {
+    color: var(--muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 0.25rem;
+  }
+
+  .summary-card.total { --sev-color: var(--accent); }
+
+  /* ---------- Severity bar chart ---------- */
+  .chart {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+
+  .chart-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 56px;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .chart-row:last-child { margin-bottom: 0; }
+
+  .chart-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  .chart-track {
+    background: var(--bg);
+    border-radius: 6px;
+    height: 22px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .chart-bar {
+    height: 100%;
+    min-width: 0;
+    border-radius: 6px;
+    background: var(--sev-color, var(--muted));
+    width: 0;
+    transition: width 0.6s ease;
+    box-shadow: 0 0 12px color-mix(in srgb, var(--sev-color, var(--muted)) 45%, transparent);
+  }
+
+  .chart-bar.empty { display: none; }
+
+  .chart-value {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- Findings table ---------- */
+  .findings-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .findings-table { width: 100%; border-collapse: collapse; }
+
+  .findings-table thead th {
+    background: var(--card-2);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  .findings-table tbody td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    font-size: 0.9rem;
+  }
+
+  .findings-table tbody tr:last-child td { border-bottom: none; }
+  .findings-table tbody tr:hover td { background: rgba(139, 92, 246, 0.05); }
+
+  .badge {
+    display: inline-block;
+    padding: 0.2rem 0.65rem;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .badge.critical { background: var(--critical); }
+  .badge.high { background: var(--high); }
+  .badge.medium { background: var(--medium); }
+  .badge.low { background: var(--low); }
+  .badge.info { background: var(--info); }
+  .badge.unknown { background: #6b7280; }
+
+  .finding-title { font-weight: 600; color: var(--text); }
+
+  .finding-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.35rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .chip {
+    background: var(--card-2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 0.05rem 0.45rem;
+    font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+    word-break: break-all;
+  }
+
+  .target-cell {
+    font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+    word-break: break-all;
+    max-width: 260px;
+  }
+
+  .cvss { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  details.evidence {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+  }
+
+  details.evidence summary {
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent);
+    user-select: none;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  details.evidence summary::-webkit-details-marker { display: none; }
+
+  details.evidence summary::before {
+    content: "▸";
+    display: inline-block;
+    transition: transform 0.15s ease;
+    font-size: 0.7rem;
+  }
+
+  details.evidence[open] summary::before { transform: rotate(90deg); }
+
+  details.evidence pre {
+    padding: 0 0.75rem 0.75rem;
+    font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: #a5b4fc;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .remediation {
+    margin-top: 0.5rem;
+    padding: 0.6rem 0.75rem;
+    background: rgba(139, 92, 246, 0.08);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    font-size: 0.82rem;
+    color: var(--text);
+  }
+
+  .remediation .rem-label {
+    display: block;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 0.15rem;
+    font-weight: 700;
+  }
+
+  .empty-state {
+    padding: 2.5rem 1rem;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .empty-state .icon { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
+
+  /* ---------- Footer ---------- */
+  .report-footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .footer-brand { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; color: var(--text); }
+  .footer-brand .dot { color: var(--accent); }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 768px) {
+    body { padding: 1.25rem 1rem; }
+    .report-header { flex-direction: column; align-items: flex-start; }
+    .chart-row { grid-template-columns: 70px 1fr 40px; gap: 0.6rem; }
+    .findings-table thead { display: none; }
+    .findings-table, .findings-table tbody, .findings-table tr, .findings-table td { display: block; width: 100%; }
+    .findings-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      padding: 0.5rem 0;
+    }
+    .findings-table tbody tr:last-child { border-bottom: none; }
+    .findings-table tbody td { border-bottom: none; padding: 0.35rem 1rem; }
+    .target-cell { max-width: none; }
+  }
+
+  /* ---------- Print ---------- */
+  @media print {
+    :root {
+      --bg: #ffffff;
+      --card: #f8fafc;
+      --card-2: #eef2f7;
+      --border: #cbd5e1;
+      --text: #0f172a;
+      --muted: #475569;
+      --accent: #6d28d9;
+    }
+
+    body { background: #fff; color: #0f172a; padding: 0; font-size: 11pt; }
+
+    .report-header { border-bottom-color: #6d28d9; }
+    .brand-mark { box-shadow: none; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    .summary-card, .chart, .findings-wrap, details.evidence, .target-banner {
+      box-shadow: none;
+      break-inside: avoid;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .chart-bar, .badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    section { break-inside: avoid; }
+
+    .findings-table tbody tr { break-inside: avoid; }
+
+    details.evidence { open: none; }
+    details.evidence pre { display: block !important; }
+
+    a { text-decoration: none; color: inherit; }
+
+    .report-footer { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <header class="report-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">🔮</span>
+      <div>
+        <h1>Spectre</h1>
+        <div class="subtitle">Security Scan Report</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div class="item">
+        <span class="k">Generated</span>
+        <span class="v">{{ generated_at }}</span>
+      </div>
+      <div class="item">
+        <span class="k">Duration</span>
+        <span class="v">{{ '%.1f'|format(duration) }}s</span>
+      </div>
+      <div class="item">
+        <span class="k">Findings</span>
+        <span class="v">{{ findings|length }}</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Target -->
+  <div class="target-banner">
+    <strong>Target:</strong> {{ target }}
+    {% if scanners %}
+    <div class="scanner-tags">
+      {% for s in scanners %}<span class="scanner-tag">{{ s }}</span>{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Executive summary -->
+  <section>
+    <h2 class="section-title">Executive Summary</h2>
+    <div class="summary-grid">
+      <div class="summary-card total">
+        <div class="count">{{ findings|length }}</div>
+        <div class="label">Total</div>
+      </div>
+      <div class="summary-card" style="--sev-color: var(--critical);">
+        <div class="count">{{ summary.get('critical', 0) }}</div>
+        <div class="label">Critical</div>
+      </div>
+      <div class="summary-card" style="--sev-color: var(--high);">
+        <div class="count">{{ summary.get('high', 0) }}</div>
+        <div class="label">High</div>
+      </div>
+      <div class="summary-card" style="--sev-color: var(--medium);">
+        <div class="count">{{ summary.get('medium', 0) }}</div>
+        <div class="label">Medium</div>
+      </div>
+      <div class="summary-card" style="--sev-color: var(--low);">
+        <div class="count">{{ summary.get('low', 0) }}</div>
+        <div class="label">Low</div>
+      </div>
+      <div class="summary-card" style="--sev-color: var(--info);">
+        <div class="count">{{ summary.get('info', 0) }}</div>
+        <div class="label">Info</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Severity distribution -->
+  <section>
+    <h2 class="section-title">Severity Distribution</h2>
+    {% set max_count = [summary.get('critical', 0), summary.get('high', 0), summary.get('medium', 0), summary.get('low', 0), summary.get('info', 0)]|max %}
+    <div class="chart">
+      {% for sev, label in [('critical','Critical'), ('high','High'), ('medium','Medium'), ('low','Low'), ('info','Info')] %}
+      {% set count = summary.get(sev, 0) %}
+      {% set pct = (count / max_count * 100) if max_count > 0 else 0 %}
+      <div class="chart-row">
+        <span class="chart-label">{{ label }}</span>
+        <div class="chart-track">
+          <div class="chart-bar{% if count == 0 %} empty{% endif %}" style="--sev-color: var(--{{ sev }}); width: {{ '%.1f'|format(pct) }}%;"></div>
+        </div>
+        <span class="chart-value">{{ count }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Findings -->
+  <section>
+    <h2 class="section-title">Findings ({{ findings|length }})</h2>
+    <div class="findings-wrap">
+      {% if findings %}
+      <table class="findings-table">
+        <thead>
+          <tr>
+            <th>Severity</th>
+            <th>Finding</th>
+            <th>Target</th>
+            <th>CVSS</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in findings %}
+          {% set sev = f.get('severity', 'info') %}
+          <tr>
+            <td><span class="badge {{ sev if sev in ['critical','high','medium','low','info'] else 'unknown' }}">{{ sev }}</span></td>
+            <td>
+              <div class="finding-title">{{ f.get('title', 'Untitled finding') }}</div>
+              <div class="finding-meta">
+                {% if f.get('scanner') %}<span class="chip">{{ f.get('scanner') }}</span>{% endif %}
+                {% for cve in (f.get('cve') or []) %}<span class="chip">{{ cve }}</span>{% endfor %}
+              </div>
+              {% if f.get('evidence') %}
+              <details class="evidence">
+                <summary>Evidence</summary>
+                <pre>{{ f.get('evidence') }}</pre>
+              </details>
+              {% endif %}
+              {% if f.get('remediation') %}
+              <div class="remediation">
+                <span class="rem-label">Remediation</span>
+                {{ f.get('remediation') }}
+              </div>
+              {% endif %}
+            </td>
+            <td class="target-cell">{{ f.get('target', '—') }}</td>
+            <td>
+              {% if f.get('cvss') is not none and f.get('cvss') != '' %}
+              <span class="cvss" style="color: var(--{{ sev if sev in ['critical','high','medium','low','info'] else 'info' }});">{{ f.get('cvss') }}</span>
+              {% else %}
+              <span style="color: var(--muted);">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state">
+        <span class="icon">🛡️</span>
+        No findings detected — the scan came back clean.
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="report-footer">
+    <div class="footer-brand">
+      <span aria-hidden="true">🔮</span> Spectre <span class="dot">•</span> Security Scanner
+    </div>
+    <div>Report generated {{ generated_at }}</div>
+  </footer>
+
+</div>
+</body>
+</html>

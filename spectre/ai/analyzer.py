@@ -2,17 +2,34 @@
 from __future__ import annotations
 
 import json
+import os
 from typing import Any
 
 from spectre.models import Finding, ScanResult
 
 
 class AIAnalyzer:
-    """LLM-powered analysis of scan results."""
+    """LLM-powered analysis of scan results.
 
-    def __init__(self, provider: str = "openai", model: str = "gpt-4"):
+    Supported providers:
+
+    - ``openai``: OpenAI API (requires ``OPENAI_API_KEY``).
+    - ``anthropic``: Anthropic API (requires ``ANTHROPIC_API_KEY``).
+    - ``ollama``: Local models served by Ollama via its HTTP API.
+      Defaults to ``http://localhost:11434`` (override with the ``host``
+      parameter or the ``OLLAMA_HOST`` environment variable). Uses no API
+      key; call :meth:`list_models` to discover installed models.
+    """
+
+    def __init__(
+        self,
+        provider: str = "openai",
+        model: str = "gpt-4",
+        host: str | None = None,
+    ):
         self.provider_name = provider
         self.model_name = model
+        self.host = host or os.environ.get("OLLAMA_HOST") or "http://localhost:11434"
         self._client = None
 
     def _get_client(self) -> Any:
@@ -29,6 +46,9 @@ class AIAnalyzer:
 
             from anthropic import AsyncAnthropic
             self._client = AsyncAnthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", ""))
+        elif self.provider_name == "ollama":
+            # No SDK client — Ollama is called directly over HTTP with httpx.
+            return None
         else:
             raise ValueError(f"Unsupported provider: {self.provider_name}")
 
@@ -104,7 +124,81 @@ class AIAnalyzer:
             )
             return response.content[0].text if response.content else ""
 
+        if self.provider_name == "ollama":
+            return await self._call_ollama(prompt)
+
         raise ValueError(f"Unsupported provider: {self.provider_name}")
+
+    async def _call_ollama(self, prompt: str) -> str:
+        """Call the Ollama chat API (POST {host}/api/chat) via httpx."""
+        import httpx
+
+        model = self.model_name or "llama3.2"
+        try:
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                response = await client.post(
+                    f"{self.host}/api/chat",
+                    json={
+                        "model": model,
+                        "messages": [{"role": "user", "content": prompt}],
+                        "stream": False,
+                    },
+                )
+        except (httpx.HTTPError, OSError) as exc:
+            raise RuntimeError(
+                f"Could not reach Ollama at {self.host} "
+                f"({exc.__class__.__name__}: {exc}). Is Ollama running? "
+                "Start it with `ollama serve`, install a model with "
+                f"`ollama pull {model}`, or point at another host via the "
+                "OLLAMA_HOST environment variable or AIAnalyzer(host=...)."
+            ) from exc
+
+        if response.is_error:
+            raise RuntimeError(
+                f"Ollama at {self.host} returned HTTP {response.status_code} "
+                f"for model '{model}': {response.text[:300]}. Is the model "
+                f"installed? Try `ollama pull {model}` or check "
+                "AIAnalyzer.list_models()."
+            )
+
+        try:
+            data = response.json()
+        except ValueError as exc:
+            raise RuntimeError(
+                f"Ollama at {self.host} returned a non-JSON response: "
+                f"{response.text[:200]}"
+            ) from exc
+        return (data.get("message") or {}).get("content", "")
+
+    async def list_models(self) -> list[str]:
+        """Return the names of models installed in Ollama (GET {host}/api/tags)."""
+        import httpx
+
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(f"{self.host}/api/tags")
+        except (httpx.HTTPError, OSError) as exc:
+            raise RuntimeError(
+                f"Could not reach Ollama at {self.host} "
+                f"({exc.__class__.__name__}: {exc}). Is Ollama running? "
+                "Start it with `ollama serve`, or point at another host via "
+                "the OLLAMA_HOST environment variable or AIAnalyzer(host=...)."
+            ) from exc
+
+        if response.is_error:
+            raise RuntimeError(
+                f"Ollama at {self.host} returned HTTP {response.status_code} "
+                f"from /api/tags: {response.text[:300]}"
+            )
+
+        try:
+            data = response.json()
+        except ValueError as exc:
+            raise RuntimeError(
+                f"Ollama at {self.host} returned a non-JSON response: "
+                f"{response.text[:200]}"
+            ) from exc
+        return [m.get("name", "") for m in data.get("models", []) if m.get("name")]
 
     @staticmethod
     def _summarize_findings(result: ScanResult) -> str:

@@ -57,7 +57,7 @@ Spectre is a next-generation security scanning platform that combines high-perfo
 |--------|-------------|
 | JSON | Machine-readable scan results |
 | Markdown | Human-readable reports |
-| HTML | Styled security reports with severity badges |
+| HTML | Professional dark-themed report with CSS bar chart (Jinja2) |
 | SARIF | GitHub code-scanning compatible format |
 
 ### AI Features
@@ -67,6 +67,7 @@ Spectre is a next-generation security scanning platform that combines high-perfo
 - **Exploit Suggestion** — Recommends proof-of-concept approaches
 - **Risk Scoring** — Context-aware severity assessment
 - **Natural Language Reports** — AI-generated executive summaries
+- **Local LLM Support** — Ollama integration for offline/private scanning
 
 ### Plugin Architecture
 
