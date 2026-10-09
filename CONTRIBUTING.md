@@ -51,7 +51,7 @@ class MyScanner(BaseScanner):
         return []
 ```
 
-Built-in scanners: `web`, `subdomain`, `port`, `secrets`, `tech`, `ssl`, `dirscan`, `cve`
+Built-in scanners: `web`, `subdomain`, `port`, `secrets`, `tech`, `ssl`, `dirscan`, `cve`, `waf`, `archive`, `robots`
 
 ## Adding a Plugin
 

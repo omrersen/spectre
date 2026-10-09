@@ -55,6 +55,7 @@ Spectre follows a modular, async-first architecture:
 - Abstract base class for all scanners
 - Required: `name`, `description`, `version`, `scan(target) -> list[Finding]`
 - Each scanner is self-contained
+- Built-in scanners: `web`, `subdomain`, `port`, `secrets`, `tech`, `ssl`, `dirscan`, `cve`, `waf`, `archive`, `robots`
 
 ### Finding (`spectre/models/finding.py`)
 - Pydantic model with severity, evidence, remediation

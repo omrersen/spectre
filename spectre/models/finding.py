@@ -1,5 +1,5 @@
+from datetime import UTC, datetime
 from enum import Enum
-from datetime import datetime, timezone
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -24,7 +24,7 @@ class Finding(BaseModel):
     cvss: float | None = None
     cve: list[str] = []
     metadata: dict = {}
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     verified: bool = False
     false_positive: bool = False
 
@@ -34,7 +34,7 @@ class ScanResult(BaseModel):
     findings: list[Finding] = []
     scanners_used: list[str] = []
     duration: float = 0.0
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     @property
     def summary(self) -> dict[str, int]:

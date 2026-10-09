@@ -4,6 +4,22 @@
 
 Spectre's plugin system lets you add custom scanners without modifying core code.
 
+## Built-in Scanners
+
+| Scanner | Name | Description |
+|---------|------|-------------|
+| 🔍 Web Scanner | `web` | SQLi, XSS, SSRF, LFI, RCE, command injection, path traversal, open redirect |
+| 🌐 Subdomain Enum | `subdomain` | crt.sh, HackerTarget, VirusTotal, DNS brute-force |
+| 🔌 Port Scanner | `port` | 1127 ports, banner grabbing, service fingerprinting |
+| 📝 Secret Scanner | `secrets` | 27 regex patterns + Shannon entropy |
+| 🏗️ Tech Detection | `tech` | 66 fingerprints (CMS, CDN, WAF, frameworks) |
+| 📜 CVE Correlation | `cve` | NVD API 2.0 + GitHub Advisories, CPE mapping |
+| 🔐 SSL/TLS | `ssl` | Protocol versions, certificates, weak ciphers, HSTS |
+| 📁 Directory Discovery | `dirscan` | 155-path wordlist, soft-404 detection |
+| 🛡️ WAF Detection | `waf` | 14 WAF signatures |
+| 🕸️ Web Archive | `archive` | Wayback Machine + URLhaus |
+| 🤖 Robots Analyzer | `robots` | robots.txt, sitemap.xml, security.txt |
+
 ## Creating a Plugin
 
 ### 1. Basic Plugin

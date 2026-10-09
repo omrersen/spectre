@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from spectre.models import Finding, ScanResult, Severity
+from spectre.models import Finding, ScanResult
 
 
 class AIAnalyzer:
@@ -20,12 +20,14 @@ class AIAnalyzer:
             return self._client
 
         if self.provider_name == "openai":
-            from openai import AsyncOpenAI
             import os
+
+            from openai import AsyncOpenAI
             self._client = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY", ""))
         elif self.provider_name == "anthropic":
-            from anthropic import AsyncAnthropic
             import os
+
+            from anthropic import AsyncAnthropic
             self._client = AsyncAnthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", ""))
         else:
             raise ValueError(f"Unsupported provider: {self.provider_name}")

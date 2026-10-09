@@ -5,6 +5,20 @@ All notable changes to Spectre will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - Unreleased
+
+### Added
+- **WAF Detection scanner** (`waf`) — 14 WAF signatures (Cloudflare, AWS WAF, Akamai, Sucuri, Imperva, F5 BIG-IP, ModSecurity, Wordfence, FortiWeb, Barracuda, DenyAll, Reblaze, Fastly, Varnish)
+- **Web Archive scanner** (`archive`) — Wayback Machine CDX API, historical sensitive paths, URLhaus malicious URL check
+- **Robots Analyzer** (`robots`) — robots.txt, sitemap.xml, security.txt, humans.txt analysis
+- CLI auto-registration for optional scanners (try/except imports)
+- ruff lint fixes across core/models/ai/plugins/reporting/integrations/utils/cli/config (65 auto-fixed)
+
+### Changed
+- ruff config moved to `[tool.ruff.lint]` section (deprecated top-level keys)
+- README scanner table expanded to 11 scanners
+- docs/getting-started.md updated with full scanner list
+
 ## [0.2.0] - 2026-10-09
 
 ### Added

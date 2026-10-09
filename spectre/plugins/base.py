@@ -5,7 +5,6 @@ import importlib
 import pkgutil
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Type
 
 from spectre.models import Finding
 
@@ -24,16 +23,16 @@ class PluginBase(ABC):
         ...
 
 
-_registry: dict[str, Type[PluginBase]] = {}
+_registry: dict[str, type[PluginBase]] = {}
 
 
-def register(cls: Type[PluginBase]) -> Type[PluginBase]:
+def register(cls: type[PluginBase]) -> type[PluginBase]:
     """Class decorator to register a plugin."""
     _registry[cls.name] = cls
     return cls
 
 
-def get_plugin(name: str) -> Type[PluginBase] | None:
+def get_plugin(name: str) -> type[PluginBase] | None:
     return _registry.get(name)
 
 

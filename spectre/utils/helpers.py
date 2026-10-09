@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import asyncio
-import re
 import time
-from typing import Any, Callable, Coroutine, TypeVar
+from collections.abc import Callable, Coroutine
+from typing import Any, TypeVar
 from urllib.parse import urlparse
 
 T = TypeVar("T")

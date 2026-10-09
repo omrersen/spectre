@@ -25,6 +25,9 @@ spectre scan https://example.com --full
 
 # Specific scanners
 spectre scan https://example.com --scanner web,secrets
+
+# All scanners (web, subdomain, secrets, port, tech, ssl, dirscan, cve, waf, archive, robots)
+spectre scan https://example.com --full
 ```
 
 ## Multi-Target Scanning

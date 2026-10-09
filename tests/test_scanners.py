@@ -9,6 +9,9 @@ from spectre.scanners.tech import TechScanner
 from spectre.scanners.ssl import SSLScanner
 from spectre.scanners.dirscan import DirScanner
 from spectre.scanners.cve import CVEScanner
+from spectre.scanners.waf import WAFScanner
+from spectre.scanners.archive import ArchiveScanner
+from spectre.scanners.robots import RobotsScanner
 from spectre.scanners.base import BaseScanner
 
 
@@ -21,6 +24,9 @@ ALL_SCANNERS = [
     SSLScanner,
     DirScanner,
     CVEScanner,
+    WAFScanner,
+    ArchiveScanner,
+    RobotsScanner,
 ]
 
 

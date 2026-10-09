@@ -47,6 +47,9 @@ Spectre is a next-generation security scanning platform that combines high-perfo
 | 📜 CVE Correlation | NVD API 2.0, CPE mapping, CVSS severity scoring | ✅ |
 | 🔐 SSL/TLS Analyzer | Protocol versions, certificates, weak ciphers, HSTS | ✅ |
 | 📁 Directory Discovery | Smart fuzzing, 155-path wordlist, soft-404 detection | ✅ |
+| 🛡️ WAF Detection | 14 WAF signatures (Cloudflare, AWS, Akamai, Imperva...) | ✅ |
+| 🕸️ Web Archive | Wayback Machine historical data + URLhaus | ✅ |
+| 🤖 Robots Analyzer | robots.txt, sitemap.xml, security.txt analysis | ✅ |
 
 ### Report Formats
 

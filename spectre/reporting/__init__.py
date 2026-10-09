@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -27,7 +27,7 @@ def _generate_markdown(data: dict[str, Any]) -> str:
         "# 🔮 Spectre Scan Report",
         "",
         f"**Target:** {data.get('target', 'N/A')}",
-        f"**Generated:** {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}",
+        f"**Generated:** {datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}",
         f"**Duration:** {data.get('duration', 0):.1f}s",
         f"**Scanners:** {', '.join(data.get('scanners_used', []))}",
         "",
@@ -103,7 +103,7 @@ def _generate_html(data: dict[str, Any]) -> str:
 <h1>🔮 Spectre Scan Report</h1>
 <p class="meta">
   Target: <strong>{_esc(data.get('target', 'N/A'))}</strong> &middot;
-  Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')} &middot;
+  Generated: {datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')} &middot;
   Duration: {data.get('duration', 0):.1f}s
 </p>
 <div class="summary">

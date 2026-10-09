@@ -1,3 +1,3 @@
-from .notifiers import SlackNotifier, DiscordNotifier, WebhookNotifier
+from .notifiers import DiscordNotifier, SlackNotifier, WebhookNotifier
 
 __all__ = ["SlackNotifier", "DiscordNotifier", "WebhookNotifier"]

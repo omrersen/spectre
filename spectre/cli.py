@@ -8,17 +8,16 @@ from rich.table import Table
 
 from spectre import __version__
 from spectre.core.engine import ScanEngine
-from spectre.models import Severity
 
 console = Console()
 
 # Import scanners
-from spectre.scanners.web import WebScanner
-from spectre.scanners.subdomain import SubdomainScanner
-from spectre.scanners.secrets import SecretsScanner
 from spectre.scanners.port import PortScanner
-from spectre.scanners.tech import TechScanner
+from spectre.scanners.secrets import SecretsScanner
 from spectre.scanners.ssl import SSLScanner
+from spectre.scanners.subdomain import SubdomainScanner
+from spectre.scanners.tech import TechScanner
+from spectre.scanners.web import WebScanner
 
 # Optional scanners (may not be installed in minimal setups)
 try:
@@ -30,6 +29,21 @@ try:
     from spectre.scanners.cve import CVEScanner
 except ImportError:
     CVEScanner = None
+
+try:
+    from spectre.scanners.waf import WAFScanner
+except ImportError:
+    WAFScanner = None
+
+try:
+    from spectre.scanners.archive import ArchiveScanner
+except ImportError:
+    ArchiveScanner = None
+
+try:
+    from spectre.scanners.robots import RobotsScanner
+except ImportError:
+    RobotsScanner = None
 
 
 def create_engine() -> ScanEngine:
@@ -49,6 +63,12 @@ def create_engine() -> ScanEngine:
         engine.register_scanner(DirScanner())
     if CVEScanner is not None:
         engine.register_scanner(CVEScanner())
+    if WAFScanner is not None:
+        engine.register_scanner(WAFScanner())
+    if ArchiveScanner is not None:
+        engine.register_scanner(ArchiveScanner())
+    if RobotsScanner is not None:
+        engine.register_scanner(RobotsScanner())
     
     return engine
 
@@ -72,13 +92,13 @@ def main():
 def scan(target: str, file_path: str, scanner: str, full: bool, parallel: bool, output: str, fmt: str, ai: bool):
     """Scan a target for vulnerabilities. Use -F to scan multiple targets from a file."""
     engine = create_engine()
-    
+
     scanners = None
     if scanner:
         scanners = [s.strip() for s in scanner.split(",")]
     elif not full:
         scanners = ["web", "tech", "ssl"]  # Default scanners
-    
+
     # Load targets from file
     targets: list[str] = []
     if file_path:
@@ -89,7 +109,7 @@ def scan(target: str, file_path: str, scanner: str, full: bool, parallel: bool, 
     else:
         console.print("[red]Error: provide a target or use -F <file>[/red]")
         return
-    
+
     # Single target
     if len(targets) == 1:
         result = asyncio.run(engine.scan(targets[0], scanners))
@@ -101,26 +121,26 @@ def scan(target: str, file_path: str, scanner: str, full: bool, parallel: bool, 
         results = []
         for t in targets:
             results.append(asyncio.run(engine.scan(t, scanners)))
-    
+
     # Print summary for each result
     all_findings = []
     for result in results:
         all_findings.extend(result.findings)
-        
+
         console.print(f"\n[bold]Scan: {result.target}[/bold]")
         console.print(f"  Duration: {result.duration:.1f}s | Findings: {len(result.findings)}")
-        
+
         summary = result.summary
         for sev in ["critical", "high", "medium", "low", "info"]:
             count = summary.get(sev, 0)
             if count > 0:
                 color = {"critical": "red", "high": "orange1", "medium": "yellow", "low": "blue", "info": "cyan"}.get(sev, "white")
                 console.print(f"  [{color}]{sev.upper()}[/{color}]: {count}")
-    
+
     # Combined severity table
     if len(results) > 1:
         console.print(f"\n[bold]Combined: {len(all_findings)} findings across {len(results)} targets[/bold]")
-    
+
     # Show critical/high findings
     severe = [f for f in all_findings if f.severity in ("critical", "high")]
     if severe:
@@ -131,11 +151,11 @@ def scan(target: str, file_path: str, scanner: str, full: bool, parallel: bool, 
             console.print(f"  {f.target}")
             if f.evidence:
                 console.print(f"  Evidence: {f.evidence[:150]}")
-    
+
     # Save output
     if output:
         from spectre.reporting import generate_report
-        
+
         if len(results) == 1:
             data = results[0].model_dump(mode="json")
         else:
@@ -145,7 +165,7 @@ def scan(target: str, file_path: str, scanner: str, full: bool, parallel: bool, 
                 "duration": sum(r.duration for r in results),
                 "scanners_used": results[0].scanners_used if results else [],
             }
-        
+
         report_content = generate_report(data, fmt)
         Path(output).write_text(report_content)
         console.print(f"\n[green]Results saved to {output}[/green]")
@@ -159,7 +179,7 @@ def subdomains(domain: str, brute: bool, passive: bool):
     """Enumerate subdomains for a domain."""
     scanner = SubdomainScanner()
     results = asyncio.run(scanner.scan(domain))
-    
+
     console.print(f"\n[bold]Found {len(results)} subdomains[/bold]\n")
     for sub in sorted(set(r.target for r in results)):
         console.print(f"  • {sub}")
@@ -173,7 +193,7 @@ def secrets(path: str, pattern: str, git_history: bool):
     """Scan for secrets and API keys."""
     scanner = SecretsScanner()
     results = asyncio.run(scanner.scan(path))
-    
+
     console.print(f"\n[bold]Found {len(results)} potential secrets[/bold]\n")
     for finding in results:
         console.print(f"[red]{finding.severity.upper()}[/red] {finding.title}")
@@ -189,10 +209,10 @@ def secrets(path: str, pattern: str, git_history: bool):
 def report(results_file: str, output: str, fmt: str):
     """Generate a report from scan results."""
     from spectre.reporting import generate_report
-    
+
     data = json.loads(Path(results_file).read_text())
     report_content = generate_report(data, fmt)
-    
+
     Path(output).write_text(report_content)
     console.print(f"[green]Report generated: {output}[/green]")
 
@@ -209,7 +229,7 @@ def config():
 def config_set(key: str, value: str):
     """Set a configuration value."""
     from spectre.config import ConfigManager
-    
+
     config_mgr = ConfigManager()
     config_mgr.set(key, value)
     console.print(f"[green]Set {key}[/green]")
@@ -220,7 +240,7 @@ def config_set(key: str, value: str):
 def config_get(key: str):
     """Get a configuration value."""
     from spectre.config import ConfigManager
-    
+
     config_mgr = ConfigManager()
     value = config_mgr.get(key)
     console.print(value or "Not set")
