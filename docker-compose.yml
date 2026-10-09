@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  spectre:
+    build: .
+    image: spectre-scanner:latest
+    volumes:
+      - ./reports:/app/reports
+      - ~/.spectre:/home/spectre/.spectre
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    # Example: docker compose run spectre scan https://example.com

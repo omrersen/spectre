@@ -1,0 +1,89 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "spectre-scanner"
+version = "0.1.0"
+description = "AI-Powered Security Scanner Platform"
+readme = "README.md"
+license = "MIT"
+authors = [
+    { name = "omrersen", email = "omrersen@users.noreply.github.com" },
+]
+requires-python = ">=3.11"
+keywords = ["security", "scanner", "vulnerability", "pentesting", "ai", "osint"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: Internet :: WWW/HTTP",
+]
+dependencies = [
+    "click>=8.1.0",
+    "httpx>=0.25.0",
+    "rich>=13.0.0",
+    "pyyaml>=6.0",
+    "aiofiles>=23.0",
+    "pydantic>=2.0",
+    "dnspython>=2.4",
+    "python-whois>=0.8",
+    "tldextract>=5.0",
+    "cryptography>=41.0",
+    "beautifulsoup4>=4.12",
+    "lxml>=4.9",
+    "Jinja2>=3.1",
+    "weasyprint>=60.0; sys_platform != 'win32'",
+]
+
+[project.optional-dependencies]
+ai = [
+    "openai>=1.0",
+    "anthropic>=0.25",
+]
+dev = [
+    "pytest>=7.4",
+    "pytest-asyncio>=0.21",
+    "pytest-cov>=4.1",
+    "black>=23.0",
+    "ruff>=0.1",
+    "mypy>=1.5",
+    "pre-commit>=3.0",
+]
+all = [
+    "spectre-scanner[ai,dev]",
+]
+
+[project.scripts]
+spectre = "spectre.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/omrersen/spectre"
+Documentation = "https://github.com/omrersen/spectre#readme"
+Repository = "https://github.com/omrersen/spectre"
+Issues = "https://github.com/omrersen/spectre/issues"
+Changelog = "https://github.com/omrersen/spectre/releases"
+
+[tool.hatch.build.targets.wheel]
+packages = ["spectre"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "TCH"]
+ignore = ["E501"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true

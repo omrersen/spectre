@@ -1,0 +1,36 @@
+# Spectre Configuration Example
+# Copy to ~/.spectre/config.yaml and edit
+
+scan:
+  threads: 50
+  timeout: 30
+  retries: 3
+  user_agent: "Spectre/0.1.0"
+
+ai:
+  enabled: false
+  provider: "openai"  # or "anthropic"
+  model: "gpt-4"
+
+scanners:
+  web:
+    enabled: true
+  subdomain:
+    enabled: true
+  secrets:
+    enabled: true
+  port:
+    enabled: true
+  tech:
+    enabled: true
+  ssl:
+    enabled: true
+
+reporting:
+  output_dir: "./reports"
+
+integrations:
+  slack:
+    enabled: false
+  discord:
+    enabled: false
